@@ -34,5 +34,6 @@ dist/
 # IDE
 .idea/
 
-# Generated markdown (tùy chọn)
-# docs/
+# Generated markdown
+docs/
+storage/

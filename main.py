@@ -1,19 +1,33 @@
-from app.services.article_service import ArticleService
-from app.services.document_service import DocumentService
+from app.services.rag_service import RagService
+from app.vectorstore.faiss_store import FaissStore
 
 
 def main():
 
-    article_service = ArticleService()
+    print("=" * 60)
+    print("Loading FAISS index...")
+    print("=" * 60)
 
-    document_service = DocumentService()
+    store = FaissStore.load()
 
-    articles = article_service.get_articles()
+    print(f"Loaded {len(store.metadata)} chunks\n")
 
-    for article in articles:
-        document_service.export(article)
+    rag = RagService(store)
 
-    print(f"Saved {len(articles)} markdown files.")
+    while True:
+
+        question = input("You: ")
+
+        if question.lower() in ["exit", "quit"]:
+            break
+
+        print()
+
+        answer = rag.ask(question)
+
+        print(answer)
+
+        print()
 
 
 if __name__ == "__main__":
