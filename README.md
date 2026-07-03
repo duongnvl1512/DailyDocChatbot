@@ -1,211 +1,92 @@
 # DailyDocChatbot
 
-DailyDocChatbot is a Python-based Retrieval-Augmented Generation (RAG) project that scrapes OptiSigns Zendesk Help Center articles, converts them to Markdown, builds a searchable document index, and powers a chatbot that answers questions using only the scraped documentation.
+DailyDocChatbot is a lightweight RAG-based support assistant for OptiSigns documentation. It scrapes help-center articles, converts them into markdown, builds a searchable FAISS index, and answers user questions using Gemini-powered retrieval and generation.
 
----
-
-## Features
-
-- Scrapes Zendesk Help Center articles
-- Converts article HTML into Markdown
-- Saves processed Markdown documents under the docs folder
-- Splits documents into smaller chunks for retrieval
-- Generates embeddings with the Gemini Embedding API
-- Stores vectors in FAISS for semantic search
-- Supports similarity search over indexed documentation
-- Provides a RAG chatbot that answers questions from retrieved content
-- Includes citation support with article URLs
-- Uploads processed documents via the Gemini API
-
----
-
-## Project Structure
-
-```text
-DailyDocChatbot/
-├── app/
-│   ├── clients/          # API clients
-│   ├── models/           # Data models
-│   ├── processors/       # HTML cleaning, Markdown conversion, chunking
-│   ├── services/         # Article, embedding, indexing, chat, and RAG services
-│   ├── utils/            # Utility helpers
-│   ├── vectorstore/      # FAISS index and metadata handling
-│   └── writers/          # Markdown export logic
-├── docs/                 # Exported Markdown documents
-├── scripts/              # Scraping, indexing, and upload scripts
-├── storage/              # FAISS index and metadata files
-├── main.py               # Chatbot entry point
-├── requirements.txt      # Python dependencies
-├── Dockerfile            # Container definition
-└── .env.sample           # Sample environment configuration
-```
-
----
-
-## Technologies Used
-
-- Python
-- Google Gemini API
-- FAISS
-- PyYAML
-- BeautifulSoup
-- Markdownify
-- Requests
-
----
-
-## Installation
+## Setup
 
 1. Clone the repository:
 
-```bash
-git clone <repository-url>
-cd DailyDocChatbot
-```
+   ```bash
+   git clone https://github.com/duongnvl1512/DailyDocChatbot.git
+   cd DailyDocChatbot
+   ```
 
 2. Create and activate a virtual environment:
 
-```bash
-python -m venv .venv
-```
-
-On Windows PowerShell:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate
+   ```
 
 3. Install dependencies:
 
-```bash
-pip install -r requirements.txt
-```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-4. Create a .env file:
+4. Create a local environment file:
+   ```bash
+   copy .env.sample .env
+   ```
+   Then set your Google API key in `.env`:
+   ```env
+   GOOGLE_API_KEY=your_api_key_here
+   ```
 
-```bash
-copy .env.sample .env
-```
+## Run locally
 
----
-
-## Environment Variables
-
-Create a .env file with the following content:
-
-```env
-GOOGLE_API_KEY=your_google_api_key
-```
-
----
-
-## Running the Project
-
-1. Scrape documents:
+Run the scraper to refresh markdown files from the support site:
 
 ```bash
 python -m scripts.scrape
 ```
 
-2. Build the FAISS index:
+Build the FAISS index from the generated docs:
 
 ```bash
 python -m scripts.build_index
 ```
 
-3. Start the chatbot:
+Start the local assistant:
 
 ```bash
-python main.py
+python testmain.py
 ```
 
----
+You can also pass a question directly:
 
-## Architecture
-
-```text
-Zendesk API
-→ HTML
-→ Markdown
-→ Chunking
-→ Gemini Embedding
-→ FAISS Vector Store
-→ Similarity Search
-→ Gemini Answer Generation
+```bash
+python testmain.py --question "How do I add a YouTube video?"
 ```
 
----
+## Daily job
 
-## Chunking Strategy
+The repository includes a GitHub Actions workflow at:
+https://github.com/duongnvl1512/DailyDocChatbot/actions
 
-Markdown content is split by paragraphs into chunks. Each chunk has a maximum size of approximately 1000 characters, and metadata is attached to every chunk. The metadata includes:
+The job runs once per day and:
 
-- article id
-- article title
-- article slug
-- article url
-- chunk index
+- detects newly added articles,
+- detects updated articles,
+- detects skipped articles,
+- rebuilds the index only when content changes are detected.
 
-This strategy is well suited for Retrieval-Augmented Generation because it preserves context within each passage while keeping each chunk small enough for efficient retrieval and embedding.
+## Chunking strategy
 
----
+The indexing pipeline follows this flow:
 
-## Vector Store
+Markdown → header-aware chunks → about 500–800 characters per chunk → 20 chunks per embedding request → FAISS IndexFlatIP
 
-Embeddings are generated with the Gemini Embedding API and stored in a FAISS index for similarity search. Metadata is stored in metadata.pkl, and the vector index is saved as index.faiss in the storage folder.
+## Sample assistant response
 
-The indexing script logs:
+![Sample assistant response](screenshot/Screenshot%20AI's%20answer.png)
 
-- number of files
-- number of chunks
-- embedding dimension
-- total vectors
+Example:
 
----
+Question: How do I add a YouTube video?
 
-## AI Assistant
+Answer: The assistant responds with a concise answer based on the indexed documentation.
 
-The chatbot uses Gemini 2.5 Flash to answer user questions. Retrieved chunks are injected into the prompt so the assistant answers using only the indexed documentation. Responses include article URLs as citations to support traceability.
+## Repository
 
----
-
-## Assignment Requirements
-
-- [x] Scrape Zendesk articles
-- [x] Convert HTML to Markdown
-- [x] Save Markdown files
-- [x] Chunk documents
-- [x] Generate embeddings
-- [x] Build FAISS vector store
-- [x] Load vector store
-- [x] Similarity search
-- [x] RAG chatbot
-- [x] Upload documents via API
-- [x] AI Assistant
-- [x] Citation support
-
----
-
-## Screenshots
-
-### Chatbot Demo
-
-![chat](screenshot/chatbot.png)
-
-### AI Assistant
-
-![assistant](screenshot/assistant.png)
-
----
-
-## Future Improvements
-
-Potential next steps include:
-
-- incremental indexing
-- hybrid search (BM25 + FAISS)
-- FastAPI REST API
-- Streamlit web UI
-- conversation memory
-- reranking
-- Docker deployment
+https://github.com/duongnvl1512/DailyDocChatbot
