@@ -27,8 +27,5 @@ jobs:
       - name: Run scraper
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          ZENDESK_EMAIL: ${{ secrets.ZENDESK_EMAIL }}
-          ZENDESK_API_TOKEN: ${{ secrets.ZENDESK_API_TOKEN }}
-          ZENDESK_SUBDOMAIN: ${{ secrets.ZENDESK_SUBDOMAIN }}
         run: |
           python main.py
