@@ -1,5 +1,5 @@
 from google import genai
-
+import time
 from app.config import GOOGLE_API_KEY
 
 
@@ -18,13 +18,18 @@ class EmbeddingService:
 
         return response.embeddings[0].values
 
-    def embed_batch(self, texts: list[str]):
-        response = self.client.models.embed_content(
-            model="gemini-embedding-2",
-            contents=texts,
-        )
 
-        return [
-            embedding.values
-            for embedding in response.embeddings
-        ]
+
+    def embed_batch(self, texts: list[str]):
+        vectors = []
+
+        for text in texts:
+            response = self.client.models.embed_content(
+                model="gemini-embedding-2",
+                contents=text,
+            )
+
+            vectors.append(response.embeddings[0].values)
+            time.sleep(0.1)
+
+        return vectors

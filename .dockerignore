@@ -1,0 +1,14 @@
+.venv
+.git
+.vscode
+
+docs
+storage
+screenshot
+
+__pycache__
+*.pyc
+
+.env
+
+tests

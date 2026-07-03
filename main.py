@@ -1,33 +1,68 @@
-from app.services.rag_service import RagService
-from app.vectorstore.faiss_store import FaissStore
+from app.models.scrape_result import ScrapeResult
+from app.services.article_service import ArticleService
+from app.services.document_service import DocumentService
+from app.services.index_service import IndexService
+from app.services.state_service import StateService
 
 
 def main():
 
+    article_service = ArticleService()
+    document_service = DocumentService()
+    state_service = StateService()
+
+    result = ScrapeResult()
+
+    articles = article_service.get_articles()
+
+    print(f"\nChecking {len(articles)} articles...\n")
+
+    for article in articles:
+
+        if state_service.is_new(article):
+
+            document_service.export(article)
+
+            state_service.update(article)
+
+            result.added += 1
+
+            continue
+
+        if state_service.is_updated(article):
+
+            document_service.export(article)
+
+            state_service.update(article)
+
+            result.updated += 1
+
+            continue
+
+        result.skipped += 1
+
+    state_service.save()
+
+    print()
     print("=" * 60)
-    print("Loading FAISS index...")
+    print("SCRAPE SUMMARY")
+    print("=" * 60)
+    print(f"Added   : {result.added}")
+    print(f"Updated : {result.updated}")
+    print(f"Skipped : {result.skipped}")
     print("=" * 60)
 
-    store = FaissStore.load()
+    if result.has_changes:
 
-    print(f"Loaded {len(store.metadata)} chunks\n")
+        print("\nChanges detected.")
+        print("Rebuilding index...\n")
 
-    rag = RagService(store)
+        IndexService().build()
 
-    while True:
+    else:
 
-        question = input("You: ")
-
-        if question.lower() in ["exit", "quit"]:
-            break
-
-        print()
-
-        answer = rag.ask(question)
-
-        print(answer)
-
-        print()
+        print("\nNo changes detected.")
+        print("Skip rebuilding index.")
 
 
 if __name__ == "__main__":
